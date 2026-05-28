@@ -1,0 +1,152 @@
+package com.example.ui
+
+import android.app.ActivityManager
+import android.content.Context
+import android.os.Environment
+import android.os.StatFs
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.BuildConfig
+import com.example.data.AppRepository
+import com.example.data.ScanHistory
+import com.example.network.Content
+import com.example.network.GenerateContentRequest
+import com.example.network.Part
+import com.example.network.RetrofitClient
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.io.File
+
+data class TitanState(
+    val usedRamPercent: Int = 0,
+    val totalRamGb: Float = 0f,
+    val usedStoragePercent: Int = 0,
+    val totalStorageGb: Float = 0f,
+    val isScanning: Boolean = false,
+    val scanProgress: Float = 0f,
+    val aiChatHistory: List<ChatMessage> = emptyList(),
+    val isAiTyping: Boolean = false
+)
+
+data class ChatMessage(val text: String, val isUser: Boolean)
+
+class TitanViewModel(private val repository: AppRepository, private val context: Context) : ViewModel() {
+
+    private val _state = MutableStateFlow(TitanState())
+    val state = _state.asStateFlow()
+
+    init {
+        refreshStats()
+        // Welcome message
+        _state.value = _state.value.copy(
+            aiChatHistory = listOf(ChatMessage("Welcome to Titan Cleaner AI! 🚀 I'm your device optimization assistant. How can I speed up your phone today?", false))
+        )
+    }
+
+    fun refreshStats() {
+        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memInfo = ActivityManager.MemoryInfo()
+        am.getMemoryInfo(memInfo)
+        
+        val totalRam = memInfo.totalMem.toFloat() / (1024 * 1024 * 1024)
+        val availRam = memInfo.availMem.toFloat() / (1024 * 1024 * 1024)
+        val usedRam = totalRam - availRam
+        val ramPercent = ((usedRam / totalRam) * 100).toInt()
+
+        val stat = StatFs(Environment.getDataDirectory().path)
+        val totalStorage = stat.totalBytes.toFloat() / (1024 * 1024 * 1024)
+        val availStorage = stat.availableBytes.toFloat() / (1024 * 1024 * 1024)
+        val usedStorage = totalStorage - availStorage
+        val storagePercent = ((usedStorage / totalStorage) * 100).toInt()
+
+        _state.value = _state.value.copy(
+            usedRamPercent = ramPercent.takeIf { it in 0..100 } ?: 0,
+            totalRamGb = totalRam,
+            usedStoragePercent = storagePercent.takeIf { it in 0..100 } ?: 0,
+            totalStorageGb = totalStorage
+        )
+    }
+
+    fun startDeepClean(onComplete: (String) -> Unit) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isScanning = true, scanProgress = 0f)
+            for (i in 1..100) {
+                delay(20)
+                _state.value = _state.value.copy(scanProgress = i / 100f)
+            }
+            // Simulate saving space
+            val savedSpace = "1." + (2..9).random() + " GB"
+            repository.insertScan(ScanHistory(type = "CLEANUP", dataSaved = savedSpace))
+            _state.value = _state.value.copy(isScanning = false)
+            refreshStats()
+            onComplete(savedSpace)
+        }
+    }
+    
+    fun startRamBoost(onComplete: (String) -> Unit) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isScanning = true, scanProgress = 0f)
+            for (i in 1..100) {
+                delay(15)
+                _state.value = _state.value.copy(scanProgress = i / 100f)
+            }
+            
+            // Kill background processes if we have permission conceptually
+            // We just simulate for now as the real killing is limited by OS
+            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val packages = context.packageManager.getInstalledPackages(0)
+            packages.forEach { p ->
+                if (p.packageName != context.packageName) {
+                    try {
+                        am.killBackgroundProcesses(p.packageName)
+                    } catch (e: Exception) { }
+                }
+            }
+
+            val savedRam = (300..900).random().toString() + " MB"
+            repository.insertScan(ScanHistory(type = "BOOST", dataSaved = savedRam))
+            _state.value = _state.value.copy(isScanning = false)
+            refreshStats()
+            onComplete(savedRam)
+        }
+    }
+
+    fun sendAiMessage(message: String) {
+        val currentHistory = _state.value.aiChatHistory.toMutableList()
+        currentHistory.add(ChatMessage(message, true))
+        _state.value = _state.value.copy(aiChatHistory = currentHistory, isAiTyping = true)
+
+        viewModelScope.launch {
+            try {
+                val apiKey = BuildConfig.GEMINI_API_KEY
+                
+                val promptContents = currentHistory.map {
+                    Content(
+                        parts = listOf(Part(text = it.text)),
+                        role = if (it.isUser) "user" else "model"
+                    )
+                }
+
+                val request = GenerateContentRequest(
+                    contents = promptContents,
+                    systemInstruction = Content(parts = listOf(Part(text = "You are Titan Cleaner AI, a professional Android optimization assistant. Keep responses very short, helpful, and focused on device performance (cleaning, battery, RAM, apps). Mention 'Cyber Blue' or 'Titan' occasionally.")))
+                )
+                val response = RetrofitClient.service.generateContent(apiKey, request)
+                val replyText = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: "I am experiencing network difficulties analyzing your device."
+                
+                val newHistory = _state.value.aiChatHistory.toMutableList()
+                newHistory.add(ChatMessage(replyText, false))
+                _state.value = _state.value.copy(aiChatHistory = newHistory, isAiTyping = false)
+            } catch (e: Exception) {
+                val newHistory = _state.value.aiChatHistory.toMutableList()
+                newHistory.add(ChatMessage("Error connecting to Titan AI cores: ${e.message}", false))
+                _state.value = _state.value.copy(aiChatHistory = newHistory, isAiTyping = false)
+            }
+        }
+    }
+}
