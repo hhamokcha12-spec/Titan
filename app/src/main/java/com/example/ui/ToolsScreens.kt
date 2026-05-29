@@ -3,6 +3,7 @@ package com.example.ui
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.theme.CyberBlue
+import com.example.ui.theme.GlassWhite
 import com.example.ui.theme.NeonPurple
 import kotlinx.coroutines.delay
 
@@ -42,23 +44,28 @@ fun CleanScreen(viewModel: TitanViewModel) {
     ) {
         if (state.isScanning) {
             Text("Deep Scanning Data...", color = CyberBlue, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             CircularProgressIndicator(
                 progress = { state.scanProgress },
-                modifier = Modifier.size(100.dp),
+                modifier = Modifier.size(120.dp),
                 color = CyberBlue,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                strokeWidth = 8.dp
+                strokeWidth = 10.dp
             )
-            Text("${(state.scanProgress * 100).toInt()}%", modifier = Modifier.padding(top = 16.dp))
+            Text("${(state.scanProgress * 100).toInt()}%", modifier = Modifier.padding(top = 16.dp), style = MaterialTheme.typography.titleLarge)
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            Card(colors = CardDefaults.cardColors(containerColor = GlassWhite), shape = RoundedCornerShape(12.dp)) {
+                Text("Analyzing cache, temp files, and obsolete APKs...", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
+            }
         } else if (showResult) {
-            Text("Optimization Complete!", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.tertiary)
-            Text("Freed up $resultText", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 8.dp))
+            Text("Optimization Complete!", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
+            Text("Freed up $resultText", style = MaterialTheme.typography.headlineMedium, color = CyberBlue, modifier = Modifier.padding(top = 8.dp))
             Spacer(modifier = Modifier.height(32.dp))
             Button(
                 onClick = { showResult = false },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) { Text("Done") }
+            ) { Text("Done", modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) }
         } else {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(250.dp)) {
                 Button(
@@ -75,7 +82,10 @@ fun CleanScreen(viewModel: TitanViewModel) {
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(containerColor = CyberBlue)
                 ) {
-                    Text("DEEP CLEAN", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.background, style = MaterialTheme.typography.titleLarge)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("DEEP CLEAN", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.background, style = MaterialTheme.typography.titleLarge)
+                        Text("Analyze & Free Space", color = MaterialTheme.colorScheme.background.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         }
@@ -112,19 +122,20 @@ fun BoostScreen(viewModel: TitanViewModel) {
             LinearProgressIndicator(
                 progress = { state.scanProgress },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(16.dp),
+                    .fillMaxWidth(0.8f)
+                    .height(12.dp),
                 color = NeonPurple,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
+            Text("${(state.scanProgress * 100).toInt()}%", modifier = Modifier.padding(top = 16.dp), style = MaterialTheme.typography.titleLarge)
         } else if (showResult) {
-            Text("RAM Boosted!", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.tertiary)
-            Text("Cleared $resultText", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 8.dp))
+            Text("RAM Boosted!", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
+            Text("Cleared $resultText", style = MaterialTheme.typography.headlineMedium, color = NeonPurple, modifier = Modifier.padding(top = 8.dp))
             Spacer(modifier = Modifier.height(32.dp))
             Button(
                 onClick = { showResult = false },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) { Text("Done") }
+            ) { Text("Done", modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) }
         } else {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(250.dp)) {
                 Button(
@@ -141,7 +152,10 @@ fun BoostScreen(viewModel: TitanViewModel) {
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(containerColor = NeonPurple)
                 ) {
-                    Text("RAM BOOST", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.titleLarge)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("RAM BOOST", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.titleLarge)
+                        Text("Speed up device", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         }

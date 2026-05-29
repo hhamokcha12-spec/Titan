@@ -43,6 +43,12 @@ object CleanRoute
 object BoostRoute
 @Serializable
 object ChatRoute
+@Serializable
+object AppManagerRoute
+@Serializable
+object BatteryGuardRoute
+@Serializable
+object GameUltraRoute
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,10 +106,13 @@ fun MainScreen(viewModel: TitanViewModel) {
             startDestination = DashboardRoute::class.qualifiedName!!,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(DashboardRoute::class.qualifiedName!!) { DashboardScreen(viewModel) }
+            composable(DashboardRoute::class.qualifiedName!!) { DashboardScreen(viewModel, navController) }
             composable(CleanRoute::class.qualifiedName!!) { CleanScreen(viewModel) }
             composable(BoostRoute::class.qualifiedName!!) { BoostScreen(viewModel) }
             composable(ChatRoute::class.qualifiedName!!) { ChatScreen(viewModel) }
+            composable(AppManagerRoute::class.qualifiedName!!) { AppManagerScreen(viewModel) }
+            composable(BatteryGuardRoute::class.qualifiedName!!) { BatteryGuardScreen(viewModel) }
+            composable(GameUltraRoute::class.qualifiedName!!) { GameUltraScreen(viewModel) }
         }
     }
 }

@@ -132,9 +132,12 @@ class TitanViewModel(private val repository: AppRepository, private val context:
                     )
                 }
 
+                val currentRamUsed = _state.value.usedRamPercent
+                val currentStorageUsed = _state.value.usedStoragePercent
+
                 val request = GenerateContentRequest(
                     contents = promptContents,
-                    systemInstruction = Content(parts = listOf(Part(text = "You are Titan Cleaner AI, a professional Android optimization assistant. Keep responses very short, helpful, and focused on device performance (cleaning, battery, RAM, apps). Mention 'Cyber Blue' or 'Titan' occasionally.")))
+                    systemInstruction = Content(parts = listOf(Part(text = "You are Titan Cleaner AI, a professional Android optimization assistant. Keep responses very short, helpful, and focused on device performance (cleaning, battery, RAM, apps). The user's device currently has ${currentRamUsed}% RAM usage and ${currentStorageUsed}% storage used. Give hyper-specific optimization advice acting as a high-tech AI system.")))
                 )
                 val response = RetrofitClient.service.generateContent(apiKey, request)
                 val replyText = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: "I am experiencing network difficulties analyzing your device."

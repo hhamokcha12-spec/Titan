@@ -28,7 +28,7 @@ import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.SuccessGreen
 
 @Composable
-fun DashboardScreen(viewModel: TitanViewModel) {
+fun DashboardScreen(viewModel: TitanViewModel, navController: androidx.navigation.NavController) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     
     LaunchedEffect(Unit) {
@@ -97,16 +97,18 @@ fun DashboardScreen(viewModel: TitanViewModel) {
         }
         
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            GlassFeature("Game Ultra", Icons.Default.SmartToy, NeonPurple)
-            GlassFeature("Battery Guard", Icons.Default.SmartToy, SuccessGreen) // Just reuse icon for simplicity
-            GlassFeature("App Mgr", Icons.Default.Dashboard, CyberBlue)
+            GlassFeature("Game Ultra", Icons.Default.SmartToy, NeonPurple) { navController.navigate(GameUltraRoute::class.qualifiedName!!) }
+            GlassFeature("Battery Guard", Icons.Default.SmartToy, SuccessGreen) { navController.navigate(BatteryGuardRoute::class.qualifiedName!!) }
+            GlassFeature("App Mgr", Icons.Default.Dashboard, CyberBlue) { navController.navigate(AppManagerRoute::class.qualifiedName!!) }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GlassFeature(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color) {
+fun GlassFeature(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier.size(100.dp).padding(4.dp),
         colors = CardDefaults.cardColors(containerColor = GlassWhite),
         shape = RoundedCornerShape(16.dp)
