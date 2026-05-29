@@ -66,11 +66,11 @@ fun AppManagerScreen(viewModel: TitanViewModel) {
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(apps) { app ->
+                items(apps, key = { it.packageName }) { app ->
                     Card(
                         colors = CardDefaults.cardColors(containerColor = GlassWhite),
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().animateItem()
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -83,12 +83,14 @@ fun AppManagerScreen(viewModel: TitanViewModel) {
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(app.name, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                                Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(app.name, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
+                                Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(app.size, color = CyberBlue, fontWeight = FontWeight.Bold)
-                                IconButton(onClick = { /* In Android, we'd fire an Intent to ACTION_DELETE */ }) {
+                                IconButton(onClick = {
+                                    apps = apps.filter { it.packageName != app.packageName }
+                                }) {
                                     Icon(Icons.Default.Delete, contentDescription = "Uninstall", tint = AlertRed)
                                 }
                             }

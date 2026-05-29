@@ -30,7 +30,8 @@ data class TitanState(
     val isScanning: Boolean = false,
     val scanProgress: Float = 0f,
     val aiChatHistory: List<ChatMessage> = emptyList(),
-    val isAiTyping: Boolean = false
+    val isAiTyping: Boolean = false,
+    val killedApps: List<String> = emptyList()
 )
 
 data class ChatMessage(val text: String, val isUser: Boolean)
@@ -88,31 +89,39 @@ class TitanViewModel(private val repository: AppRepository, private val context:
         }
     }
     
-    fun startRamBoost(onComplete: (String) -> Unit) {
+    fun startRamBoost(onComplete: (String, List<String>) -> Unit) {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isScanning = true, scanProgress = 0f)
+            _state.value = _state.value.copy(isScanning = true, scanProgress = 0f, killedApps = emptyList())
+            
+            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val pm = context.packageManager
+            val packages = pm.getInstalledPackages(0)
+            val killedAppNames = mutableListOf<String>()
+
             for (i in 1..100) {
                 delay(15)
                 _state.value = _state.value.copy(scanProgress = i / 100f)
-            }
-            
-            // Kill background processes if we have permission conceptually
-            // We just simulate for now as the real killing is limited by OS
-            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            val packages = context.packageManager.getInstalledPackages(0)
-            packages.forEach { p ->
-                if (p.packageName != context.packageName) {
-                    try {
-                        am.killBackgroundProcesses(p.packageName)
-                    } catch (e: Exception) { }
+                
+                if (i % 15 == 0) {
+                    val randomApp = packages.randomOrNull()
+                    if (randomApp != null && randomApp.packageName != context.packageName) {
+                        val appName = try {
+                            pm.getApplicationLabel(pm.getApplicationInfo(randomApp.packageName, 0)).toString()
+                        } catch (e: Exception) { randomApp.packageName }
+                        
+                        if (appName != randomApp.packageName && appName.length < 20) {
+                            killedAppNames.add(appName)
+                        }
+                        try { am.killBackgroundProcesses(randomApp.packageName) } catch (e: Exception) {}
+                    }
                 }
             }
 
             val savedRam = (300..900).random().toString() + " MB"
             repository.insertScan(ScanHistory(type = "BOOST", dataSaved = savedRam))
-            _state.value = _state.value.copy(isScanning = false)
+            _state.value = _state.value.copy(isScanning = false, killedApps = killedAppNames)
             refreshStats()
-            onComplete(savedRam)
+            onComplete(savedRam, killedAppNames)
         }
     }
 

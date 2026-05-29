@@ -6,6 +6,8 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,14 +62,55 @@ fun BatteryGuardScreen(viewModel: TitanViewModel) {
         Text("AI Battery Life Extender", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(32.dp))
 
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(200.dp)) {
-            CircularProgressIndicator(
-                progress = { animatedPct },
-                modifier = Modifier.fillMaxSize(),
-                color = if (batteryPct > 20) SuccessGreen else AlertRed,
-                strokeWidth = 16.dp,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(220.dp)) {
+            val waveAnim = rememberInfiniteTransition(label = "wave")
+            val phase by waveAnim.animateFloat(
+                initialValue = 0f, 
+                targetValue = 2f * Math.PI.toFloat(), 
+                animationSpec = infiniteRepeatable(animation = tween(2000, easing = LinearEasing), repeatMode = RepeatMode.Restart),
+                label = "phase"
             )
+            
+            val surfaceVariantColor = MaterialTheme.colorScheme.surfaceVariant
+            
+            androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                val waveColor = if (batteryPct > 20) SuccessGreen else AlertRed
+                drawCircle(
+                    color = surfaceVariantColor,
+                    radius = size.width / 2,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 16.dp.toPx())
+                )
+                
+                // Draw wave for battery inside
+                val path = androidx.compose.ui.graphics.Path()
+                val waterLevel = size.height * (1f - animatedPct)
+                val amplitude = 15f
+                path.moveTo(0f, size.height)
+                path.lineTo(0f, waterLevel)
+                
+                for (x in 0..size.width.toInt() step 5) {
+                    val y = waterLevel + kotlin.math.sin(phase + (x / size.width) * 4f * Math.PI.toFloat()) * amplitude
+                    path.lineTo(x.toFloat(), y.toFloat())
+                }
+                
+                path.lineTo(size.width, size.height)
+                path.close()
+                
+                clipPath(androidx.compose.ui.graphics.Path().apply { addOval(androidx.compose.ui.geometry.Rect(0f, 0f, size.width, size.height)) }) {
+                    drawPath(
+                        path = path,
+                        color = waveColor.copy(alpha = 0.5f)
+                    )
+                }
+                
+                drawArc(
+                    color = waveColor,
+                    startAngle = -90f,
+                    sweepAngle = 360f * animatedPct,
+                    useCenter = false,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 16.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                )
+            }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
                     Icons.Default.BatteryChargingFull,

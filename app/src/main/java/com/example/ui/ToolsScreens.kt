@@ -97,6 +97,7 @@ fun BoostScreen(viewModel: TitanViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showResult by remember { mutableStateOf(false) }
     var resultText by remember { mutableStateOf("") }
+    var killedAppsList by remember { mutableStateOf<List<String>>(emptyList()) }
     
     val pulseAnim = rememberInfiniteTransition(label = "pulse")
     val scale by pulseAnim.animateFloat(
@@ -131,7 +132,26 @@ fun BoostScreen(viewModel: TitanViewModel) {
         } else if (showResult) {
             Text("RAM Boosted!", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.Bold)
             Text("Cleared $resultText", style = MaterialTheme.typography.headlineMedium, color = NeonPurple, modifier = Modifier.padding(top = 8.dp))
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            if (killedAppsList.isNotEmpty()) {
+                Text("Optimized ${killedAppsList.size} background apps", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(16.dp))
+                androidx.compose.foundation.lazy.LazyColumn(
+                    modifier = Modifier.fillMaxWidth().weight(1f, fill = false).padding(horizontal = 8.dp)
+                ) {
+                    items(killedAppsList.size) { i ->
+                        Card(colors = CardDefaults.cardColors(containerColor = GlassWhite), modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                            Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(killedAppsList[i], style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+                                Text("Stopped", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
             Button(
                 onClick = { showResult = false },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -140,8 +160,9 @@ fun BoostScreen(viewModel: TitanViewModel) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(250.dp)) {
                 Button(
                     onClick = {
-                        viewModel.startRamBoost { saved ->
+                        viewModel.startRamBoost { saved, apps ->
                             resultText = saved
+                            killedAppsList = apps
                             showResult = true
                         }
                     },

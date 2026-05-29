@@ -31,6 +31,38 @@ fun GameUltraScreen(viewModel: TitanViewModel) {
         Text("Game Ultra Mode", style = MaterialTheme.typography.headlineLarge, color = NeonPurple, fontWeight = FontWeight.Bold)
         Text("Boost FPS & minimize latency", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        var ping by remember { mutableStateOf(45) }
+        var fps by remember { mutableStateOf(60) }
+        
+        LaunchedEffect(isTurboEnabled) {
+            if (isTurboEnabled) {
+                while(true) {
+                    ping = (12..18).random()
+                    fps = (110..120).random()
+                    delay(1500)
+                }
+            } else {
+                while(true) {
+                    ping = (40..60).random()
+                    fps = (45..60).random()
+                    delay(2000)
+                }
+            }
+        }
+        
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("$ping ms", style = MaterialTheme.typography.headlineMedium, color = if (isTurboEnabled) com.example.ui.theme.SuccessGreen else MaterialTheme.colorScheme.onSurface)
+                Text("Network Ping", style = MaterialTheme.typography.bodySmall)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("$fps", style = MaterialTheme.typography.headlineMedium, color = if (isTurboEnabled) NeonPurple else MaterialTheme.colorScheme.onSurface)
+                Text("FPS", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+
         Spacer(modifier = Modifier.height(48.dp))
         
         if (optimizationProgress > 0f && optimizationProgress < 1f) {

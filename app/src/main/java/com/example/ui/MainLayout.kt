@@ -101,18 +101,20 @@ fun MainScreen(viewModel: TitanViewModel) {
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = DashboardRoute::class.qualifiedName!!,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(DashboardRoute::class.qualifiedName!!) { DashboardScreen(viewModel, navController) }
-            composable(CleanRoute::class.qualifiedName!!) { CleanScreen(viewModel) }
-            composable(BoostRoute::class.qualifiedName!!) { BoostScreen(viewModel) }
-            composable(ChatRoute::class.qualifiedName!!) { ChatScreen(viewModel) }
-            composable(AppManagerRoute::class.qualifiedName!!) { AppManagerScreen(viewModel) }
-            composable(BatteryGuardRoute::class.qualifiedName!!) { BatteryGuardScreen(viewModel) }
-            composable(GameUltraRoute::class.qualifiedName!!) { GameUltraScreen(viewModel) }
+        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            ParticleBackground()
+            NavHost(
+                navController = navController,
+                startDestination = DashboardRoute::class.qualifiedName!!
+            ) {
+                composable(DashboardRoute::class.qualifiedName!!) { DashboardScreen(viewModel, navController) }
+                composable(CleanRoute::class.qualifiedName!!) { CleanScreen(viewModel) }
+                composable(BoostRoute::class.qualifiedName!!) { BoostScreen(viewModel) }
+                composable(ChatRoute::class.qualifiedName!!) { ChatScreen(viewModel) }
+                composable(AppManagerRoute::class.qualifiedName!!) { AppManagerScreen(viewModel) }
+                composable(BatteryGuardRoute::class.qualifiedName!!) { BatteryGuardScreen(viewModel) }
+                composable(GameUltraRoute::class.qualifiedName!!) { GameUltraScreen(viewModel) }
+            }
         }
     }
 }
